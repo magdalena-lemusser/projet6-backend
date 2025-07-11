@@ -1,6 +1,17 @@
 const express = require('express');
 
 const app = express();
+const mongoose = require('mongoose');
+
+const stuffRoutes = require('./routes/stuff');
+
+mongoose
+  .connect(
+    'mongodb+srv://magdalenalemusser:Oresama2303@cluster0.ku28jho.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+  )
+  .then(() => console.log('Connexion à MongoDB réussie !'))
+  .catch(() => console.log('Connexion à MongoDB échouée !'));
+
 app.use(express.json());
 
 app.use((req, res, next) => {
@@ -16,31 +27,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.post('/api/books', (req, res, next) => {
-  console.log;
-});
-app.get('/api/books', (req, res, next) => {
-  const books = [
-    {
-      _id: 'oeihfzeoi',
-      title: 'Mon premier objet',
-      description: 'Les infos de mon premier objet',
-      imageUrl:
-        'https://cdn.pixabay.com/photo/2019/06/11/18/56/camera-4267692_1280.jpg',
-      price: 4900,
-      userId: 'qsomihvqios'
-    },
-    {
-      _id: 'oeihfzeomoihi',
-      title: 'Mon deuxième objet',
-      description: 'Les infos de mon deuxième objet',
-      imageUrl:
-        'https://cdn.pixabay.com/photo/2019/06/11/18/56/camera-4267692_1280.jpg',
-      price: 2900,
-      userId: 'qsomihvqios'
-    }
-  ];
-  res.status(200).json(books);
-});
+app.use(bodyParser.json());
+
+app.use('api/stuff', stuffRoutes);
 
 module.exports = app;
