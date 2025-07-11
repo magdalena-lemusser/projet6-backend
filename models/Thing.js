@@ -8,4 +8,4 @@ const thingSchema = mongoose.Schema({
   price: { type: Number, required: true }
 });
 
-module.exports = mongoose.model('Thing', thingSchema);
+module.exports = mongoose.model('Thing', thingSchema); //the first param is the NAME of the model we export, the second one is the schema, or template
