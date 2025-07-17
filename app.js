@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 
 const stuffRoutes = require('./routes/stuff');
 const userRoutes = require('./routes/user');
+const path = require('path');
 
 mongoose
   .connect(
@@ -28,7 +29,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/api/stuff', stuffRoutes);
+app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use('/api/books', stuffRoutes);
 console.log('userRoutes:', userRoutes);
 console.log('Contenu du module user:', require('./routes/user'));
 app.use('/api/auth', userRoutes);
