@@ -1,13 +1,20 @@
 const mongoose = require('mongoose');
 
-//change this to match front: common.js and BookForm.jsx
+//changed the model! added two schemas: rating and thing
+const ratingSchema = mongoose.Schema({
+  userId: { type: String, required: true },
+  grade: { type: Number, required: true }
+});
+
 const thingSchema = mongoose.Schema({
+  userId: { type: String, required: true },
   title: { type: String, required: true },
-  auteur: { type: String, required: true },
-  année: { type: Number, required: true },
-  genre: { type: String, required: true }
-  //comment inclure la note?
-  //comment inclure l'image?
+  author: { type: String, required: true },
+  year: { type: Number, required: true },
+  genre: { type: String, required: true },
+  imageUrl: { type: String, required: true }, //cause my controller already created a custom image URL
+  ratings: { type: [ratingSchema], default: [] },
+  averageRating: { type: Number, required: true }
 });
 
 module.exports = mongoose.model('Thing', thingSchema); //the first param is the NAME of the model we export, the second one is the schema, or template

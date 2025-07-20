@@ -3,7 +3,7 @@ const fs = require('fs');
 
 //change this to match front: common.js and BookForm.jsx
 exports.createThing = (req, res, next) => {
-  const thingObject = JSON.parse(req.body.thing);
+  const thingObject = JSON.parse(req.body.book);
   delete thingObject._id;
   delete thingObject._userId;
   const thing = new Thing({
@@ -15,7 +15,7 @@ exports.createThing = (req, res, next) => {
   thing
     .save()
     .then(() => {
-      res.status(201).json({ message: 'Objet enregistré !' });
+      res.status(201).json({ message: 'Livre enregistré !' });
     })
     .catch((error) => {
       res.status(400).json({ error });
