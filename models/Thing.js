@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-//changed the model! added two schemas: rating and thing
 const ratingSchema = mongoose.Schema({
   userId: { type: String, required: true },
   grade: { type: Number, required: true }
