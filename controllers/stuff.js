@@ -1,4 +1,4 @@
-const Thing = require('../models/thing');
+const Thing = require('../models/Thing');
 const fs = require('fs');
 
 //change this to match front: common.js and BookForm.jsx
@@ -34,6 +34,54 @@ exports.getOneThing = (req, res, next) => {
         error: error
       });
     });
+};
+
+exports.rateBook = async (req, res) => {
+  try {
+    const bookId = req.params.id;
+    const { userId, rating } = req.body;
+
+    const book = await Thing.findById(bookId);
+    if (!book) {
+      return res.status(404).json({ message: 'Livre inexistant' });
+    }
+
+    // Prevent duplicate rating by the same user
+    const alreadyRated = book.ratings.find((r) => r.userId === userId);
+    if (alreadyRated) {
+      return res.status(400).json({ message: 'Vous avez déjà noté ce livre' });
+    }
+
+    // Add new rating
+    book.ratings.push({ userId, grade: rating });
+
+    // Recalculate average rating
+    const total = book.ratings.reduce((acc, cur) => acc + cur.grade, 0);
+    book.averageRating = total / book.ratings.length;
+
+    await book.save();
+    res.status(200).json(book);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getBestRatedBooks = async (req, res) => {
+  console.log('🎯 /bestrating route was hit');
+  try {
+    // Step 1: Fetch books with averageRating >= 4, sorted by averageRating descending
+    const bestRatedBooks = await Thing.find({
+      averageRating: { $gte: 4 }
+    }).sort({ averageRating: -1 });
+
+    // Step 2: Return them
+    res.status(200).json(bestRatedBooks);
+  } catch (error) {
+    console.error('Error fetching best rated books:', error);
+    res
+      .status(500)
+      .json({ error: 'Server error while fetching best rated books' });
+  }
 };
 
 exports.modifyThing = (req, res, next) => {
