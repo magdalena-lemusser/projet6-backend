@@ -16,4 +16,4 @@ const thingSchema = mongoose.Schema({
   averageRating: { type: Number, required: true }
 });
 
-module.exports = mongoose.model('Thing', thingSchema); //the first param is the NAME of the model we export, the second one is the schema, or template
+module.exports = mongoose.model('Book', thingSchema); //the first param is the NAME of the model we export, the second one is the schema, or template
