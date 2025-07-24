@@ -1,25 +1,53 @@
 const Thing = require('../models/Thing');
 const fs = require('fs');
+const path = require('path');
+const sharp = require('sharp');
 
-//change this to match front: common.js and BookForm.jsx
-exports.createThing = (req, res, next) => {
+exports.createThing = async (req, res, next) => {
   const thingObject = JSON.parse(req.body.book);
   delete thingObject._id;
   delete thingObject._userId;
-  const thing = new Thing({
-    ...thingObject,
-    userId: req.auth.userId,
-    imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-  });
 
-  thing
-    .save()
-    .then(() => {
-      res.status(201).json({ message: 'Livre enregistré !' });
-    })
-    .catch((error) => {
-      res.status(400).json({ error });
+  const filePath = `images/${req.file.filename}`;
+  const fullPath = path.join(__dirname, '..', filePath);
+
+  try {
+    // Check file size (in bytes)
+    const stats = fs.statSync(fullPath); //checks the file's metadata
+    const fileSizeInKB = stats.size / 1024; //divides by 1024 to go from bytes to KB
+
+    if (fileSizeInKB > 1024) {
+      const compressedFilename = `compressed_${req.file.filename}`;
+      const compressedPath = path.join(
+        __dirname,
+        '..',
+        'images',
+        compressedFilename
+      );
+
+      await sharp(fullPath)
+        .resize({ width: 800 }) // Optional: resize to width
+        .jpeg({ quality: 70 }) // Compress to JPEG, 70% quality
+        .toFile(compressedPath);
+
+      // Delete the original uncompressed image
+      fs.unlinkSync(fullPath);
+
+      // Update image URL
+      req.file.filename = compressedFilename;
+    }
+
+    const thing = new Thing({
+      ...thingObject,
+      userId: req.auth.userId,
+      imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     });
+
+    await thing.save();
+    res.status(201).json({ message: 'Livre enregistré !' });
+  } catch (error) {
+    res.status(400).json({ error });
+  }
 };
 
 exports.getOneThing = (req, res, next) => {
@@ -67,7 +95,6 @@ exports.rateBook = async (req, res) => {
 };
 
 exports.getBestRatedBooks = async (req, res) => {
-  console.log('🎯 /bestrating route was hit');
   try {
     // Step 1: Fetch books with averageRating >= 4, sorted by averageRating descending
     const bestRatedBooks = await Thing.find({
