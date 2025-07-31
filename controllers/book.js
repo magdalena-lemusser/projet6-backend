@@ -1,6 +1,6 @@
 const Book = require('../models/Book');
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs'); //module qui permet d'agir sur les fichiers
+const path = require('path'); // construit des chémins sécurisés
 const sharp = require('sharp');
 
 exports.createBook = async (req, res, next) => {
@@ -12,9 +12,8 @@ exports.createBook = async (req, res, next) => {
   const fullPath = path.join(__dirname, '..', filePath);
 
   try {
-    // Check file size (in bytes)
-    const stats = fs.statSync(fullPath); //checks the file's metadata
-    const fileSizeInKB = stats.size / 1024; //divides by 1024 to go from bytes to KB
+    const stats = fs.statSync(fullPath); //vérifie les metadata - taille du fichier
+    const fileSizeInKB = stats.size / 1024; //divise par 1024 (bytes à KB)
 
     if (fileSizeInKB > 1024) {
       const compressedFilename = `compressed_${req.file.filename}`;
@@ -26,14 +25,14 @@ exports.createBook = async (req, res, next) => {
       );
 
       await sharp(fullPath)
-        .resize({ width: 800 }) // Optional: resize to width
-        .jpeg({ quality: 70 }) // Compress to JPEG, 70% quality
+        .resize({ width: 800 }) //
+        .jpeg({ quality: 70 }) //
         .toFile(compressedPath);
 
-      // Delete the original uncompressed image
+      // supprime l'image non-compressée
       fs.unlinkSync(fullPath);
 
-      // Update image URL
+      // met à jour l'url de l'image
       req.file.filename = compressedFilename;
     }
 
@@ -70,16 +69,16 @@ exports.rateBook = async (req, res) => {
       return res.status(404).json({ message: 'Livre inexistant' });
     }
 
-    // Prevent duplicate rating by the same user
+    // évite une double note par le même utilisateur
     const alreadyRated = book.ratings.find((r) => r.userId === userId);
     if (alreadyRated) {
       return res.status(400).json({ message: 'Vous avez déjà noté ce livre' });
     }
 
-    // Add new rating
+    // rajoute une nouvelle valeur
     book.ratings.push({ userId, grade: rating });
 
-    // Recalculate average rating
+    //calcule la moyenne avec .reduce pour réduire le tableau de notes en une seule valeur
     const total = book.ratings.reduce((acc, cur) => acc + cur.grade, 0);
     book.averageRating = total / book.ratings.length;
 
@@ -92,12 +91,13 @@ exports.rateBook = async (req, res) => {
 
 exports.getBestRatedBooks = async (req, res) => {
   try {
-    // Step 1: Fetch books with averageRating >= 4, sorted by averageRating descending
+    // Fetch books with averageRating >= 4
     const bestRatedBooks = await Book.find({
-      averageRating: { $gte: 4 }
-    }).sort({ averageRating: -1 });
+      averageRating: { $gte: 4 } // GTE: Greater Than or Equal - opérateur mongo
+    })
+      .sort({ averageRating: -1 }) // tri décroissant
+      .limit(3);
 
-    // Step 2: Return them
     res.status(200).json(bestRatedBooks);
   } catch (error) {
     console.error('Error fetching best rated books:', error);
