@@ -1,7 +1,7 @@
 const Book = require('../models/Book');
 const fs = require('fs'); //module qui permet d'agir sur les fichiers
 const path = require('path'); // construit des chémins sécurisés
-const sharp = require('sharp');
+const sharp = require('sharp'); //librairie pour optimisation d'images
 
 exports.createBook = async (req, res, next) => {
   const bookObject = JSON.parse(req.body.book);
@@ -80,8 +80,8 @@ exports.rateBook = async (req, res) => {
 
     //calcule la moyenne avec .reduce pour réduire le tableau de notes en une seule valeur
     const total = book.ratings.reduce((acc, cur) => acc + cur.grade, 0);
-    book.averageRating = total / book.ratings.length;
-
+    book.averageRating = Math.round((total / book.ratings.length) * 10) / 10;
+    console.log(book.averageRating);
     await book.save();
     res.status(200).json(book);
   } catch (error) {
