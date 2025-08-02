@@ -1,5 +1,3 @@
-console.log('user.js is loaded');
-
 const express = require('express');
 const router = express.Router();
 const userCtrl = require('../controllers/user');
