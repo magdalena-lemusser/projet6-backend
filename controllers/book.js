@@ -1,7 +1,7 @@
 const Book = require('../models/Book');
-const fs = require('fs'); //module qui permet d'agir sur les fichiers
-const path = require('path'); // construit des chémins sécurisés
-const sharp = require('sharp'); //librairie pour optimisation d'images
+const fs = require('fs');
+const path = require('path');
+const sharp = require('sharp');
 
 exports.createBook = async (req, res, next) => {
   const bookObject = JSON.parse(req.body.book);
@@ -12,8 +12,8 @@ exports.createBook = async (req, res, next) => {
   const fullPath = path.join(__dirname, '..', filePath);
 
   try {
-    const stats = fs.statSync(fullPath); //vérifie les metadata - taille du fichier
-    const fileSizeInKB = stats.size / 1024; //divise par 1024 (bytes à KB)
+    const stats = fs.statSync(fullPath);
+    const fileSizeInKB = stats.size / 1024;
 
     if (fileSizeInKB > 1024) {
       const compressedFilename = `compressed_${req.file.filename}`;
@@ -25,14 +25,11 @@ exports.createBook = async (req, res, next) => {
       );
 
       await sharp(fullPath)
-        .resize({ width: 800 }) //
-        .jpeg({ quality: 70 }) //
+        .resize({ width: 800 })
+        .jpeg({ quality: 70 })
         .toFile(compressedPath);
 
-      // supprime l'image non-compressée
       fs.unlinkSync(fullPath);
-
-      // met à jour l'url de l'image
       req.file.filename = compressedFilename;
     }
 
@@ -69,19 +66,16 @@ exports.rateBook = async (req, res) => {
       return res.status(404).json({ message: 'Livre inexistant' });
     }
 
-    // évite une double note par le même utilisateur
     const alreadyRated = book.ratings.find((r) => r.userId === userId);
     if (alreadyRated) {
       return res.status(400).json({ message: 'Vous avez déjà noté ce livre' });
     }
 
-    // rajoute une nouvelle valeur
     book.ratings.push({ userId, grade: rating });
 
-    //calcule la moyenne avec .reduce pour réduire le tableau de notes en une seule valeur
     const total = book.ratings.reduce((acc, cur) => acc + cur.grade, 0);
     book.averageRating = Math.round((total / book.ratings.length) * 10) / 10;
-    console.log(book.averageRating);
+
     await book.save();
     res.status(200).json(book);
   } catch (error) {
@@ -91,16 +85,14 @@ exports.rateBook = async (req, res) => {
 
 exports.getBestRatedBooks = async (req, res) => {
   try {
-    // Fetch books with averageRating >= 4
     const bestRatedBooks = await Book.find({
-      averageRating: { $gte: 4 } // GTE: Greater Than or Equal - opérateur mongo
+      averageRating: { $gte: 4 }
     })
-      .sort({ averageRating: -1 }) // tri décroissant
+      .sort({ averageRating: -1 })
       .limit(3);
 
     res.status(200).json(bestRatedBooks);
   } catch (error) {
-    console.error('Error fetching best rated books:', error);
     res
       .status(500)
       .json({ error: 'Server error while fetching best rated books' });
@@ -113,9 +105,9 @@ exports.modifyBook = (req, res, next) => {
         ...JSON.parse(req.body.book),
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
       }
-    : { ...req.body }; //s'il y a une image ? traite la : sinon - traite l'objet entrant
+    : { ...req.body };
 
-  delete bookObject._userId; //mesure de securite
+  delete bookObject._userId;
   Book.findOne({ _id: req.params.id })
     .then((book) => {
       if (book.userId != req.auth.userId) {
